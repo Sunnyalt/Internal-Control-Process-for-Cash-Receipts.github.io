@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>现金收入内控流程</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --primary: #1a5fb4;
+      --primary-light: #e8f0fb;
+      --accent: #26a269;
+      --danger: #c01c28;
+      --warn: #e5a50a;
+      --text: #1c1c1c;
+      --muted: #5e5c64;
+      --border: #d8dee9;
+      --shadow: 0 8px 24px rgba(26, 95, 180, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: var(--shadow);
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 0.92rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-secondary { background: #eef2f7; color: var(--text); }
+    .btn-danger { background: #fde8ea; color: var(--danger); }
+
+    .progress {
+      height: 6px;
+      background: #e9eef5;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 22px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: width 0.45s ease;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .flow { grid-template-columns: 1fr; }
+    }
+
+    .step {
+      position: relative;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      background: #fafbfd;
+      opacity: 0.35;
+      transform: translateY(8px);
+      transition: all 0.45s ease;
+    }
+
+    .step.active {
+      opacity: 1;
+      transform: translateY(0);
+      border-color: var(--primary);
+      background: var(--primary-light);
+      box-shadow: var(--shadow);
+    }
+
+    .step.done {
+      opacity: 1;
+      transform: translateY(0);
+      border-color: var(--accent);
+      background: #edf9f2;
+    }
+
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .step.done .step-num { background: var(--accent); }
+
+    .step h3 {
+      font-size: 0.98rem;
+      margin-bottom: 6px;
+    }
+
+    .step p {
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+
+    .scene {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 20px;
+      align-items: center;
+    }
+
+    @media (max-width: 800px) {
+      .scene { grid-template-columns: 1fr; }
+    }
+
+    .actors {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      min-height: 220px;
+      background: linear-gradient(180deg, #eef4fc 0%, #f8fbff 100%);
+      border-radius: 14px;
+      padding: 20px 12px 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .actor {
+      text-align: center;
+      transition: transform 0.4s ease, opacity 0.4s ease;
+      opacity: 0.4;
+    }
+
+    .actor.highlight {
+      opacity: 1;
+      transform: scale(1.06);
+    }
+
+    .avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 8px;
+      background: #fff;
+      border: 3px solid var(--border);
+    }
+
+    .actor.highlight .avatar {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 6px rgba(26, 95, 180, 0.12);
+    }
+
+    .actor-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .actor-role {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .arrow {
+      position: absolute;
+      font-size: 1.6rem;
+      color: var(--primary);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    .arrow.show { opacity: 1; animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+    }
+
+    .caption-box {
+      min-height: 160px;
+      border-left: 4px solid var(--primary);
+      background: #f8fbff;
+      border-radius: 0 12px 12px 0;
+      padding: 18px 20px;
+    }
+
+    .caption-box h3 {
+      color: var(--primary);
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+    }
+
+    .caption-box p {
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      background: #edf9f2;
+      color: var(--accent);
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 760px) {
+      .compare { grid-template-columns: 1fr; }
+    }
+
+    .compare-card {
+      border-radius: 14px;
+      padding: 18px;
+      min-height: 280px;
+    }
+
+    .compare-card.bad {
+      background: #fff5f5;
+      border: 2px solid #f5c2c7;
+    }
+
+    .compare-card.good {
+      background: #f3fbf6;
+      border: 2px solid #b8e6c8;
+    }
+
+    .compare-card h3 {
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+
+    .compare-card.bad h3 { color: var(--danger); }
+    .compare-card.good h3 { color: var(--accent); }
+
+    .mini-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mini-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+    }
+
+    .mini-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .bad .mini-icon { background: #fde8ea; }
+    .good .mini-icon { background: #dff5e8; }
+
+    .flash {
+      animation: flash 0.8s ease;
+    }
+
+    @keyframes flash {
+      0% { box-shadow: 0 0 0 0 rgba(192, 28, 40, 0.35); }
+      70% { box-shadow: 0 0 0 12px rgba(192, 28, 40, 0); }
+      100% { box-shadow: none; }
+    }
+
+    .note {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #fff8e6;
+      color: #7c5a00;
+      font-size: 0.86rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>现金收入内控：保证全部现金收入无一遗漏地全部入账</h1>
+      <p>可投影演示 · 分步动画 · 合规/违规对照</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="flow">流程图动画</button>
+      <button class="tab" data-tab="scene">角色情景动画</button>
+      <button class="tab" data-tab="compare">合规 vs 违规</button>
+    </div>
+
+    <!-- 流程图动画 -->
+    <section class="panel active" id="panel-flow">
+      <div class="card">
+        <div class="controls">
+          <button class="btn-primary" id="playFlow">▶ 自动播放</button>
+          <button class="btn-secondary" id="prevFlow">上一步</button>
+          <button class="btn-secondary" id="nextFlow">下一步</button>
+          <button class="btn-danger" id="resetFlow">重置</button>
+        </div>
+        <div class="progress"><div class="progress-bar" id="flowProgress"></div></div>
+        <div class="flow" id="flowSteps"></div>
+        <div class="caption-box" id="flowCaption">
+          <h3>点击"自动播放"开始</h3>
+          <p>六步内控环环相扣：分工 → 开票 → 控号 → 签收 → 核对注销 → 入账送存。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 角色情景动画 -->
+    <section class="panel" id="panel-scene">
+      <div class="card">
+        <div class="controls">
+          <button class="btn-primary" id="playScene">▶ 播放情景</button>
+          <button class="btn-danger" id="resetScene">重置</button>
+        </div>
+        <div class="scene">
+          <div class="actors">
+            <div class="actor" id="actorA">
+              <div class="avatar">👤</div>
+              <div class="actor-name">业务员 A</div>
+              <div class="actor-role">签收据</div>
+            </div>
+            <div class="arrow" id="arrowAB" style="left: 32%; top: 42%;">➜</div>
+            <div class="actor" id="actorB">
+              <div class="avatar">💰</div>
+              <div class="actor-name">出纳 B</div>
+              <div class="actor-role">收现金</div>
+            </div>
+            <div class="arrow" id="arrowBC" style="right: 32%; top: 42%;">➜</div>
+            <div class="actor" id="actorC">
+              <div class="avatar">📒</div>
+              <div class="actor-name">会计 C</div>
+              <div class="actor-role">入账核对</div>
+            </div>
+          </div>
+          <div class="caption-box" id="sceneCaption">
+            <h3>角色分工演示</h3>
+            <p>点击"播放情景"，看一笔现金收入如何经过三人分工、编号管控，最终当日入账并送存银行。</p>
+            <span class="tag">核心：不相容职务分离</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 合规 vs 违规 -->
+    <section class="panel" id="panel-compare">
+      <div class="card">
+        <div class="controls">
+          <button class="btn-primary" id="flashBad">🔴 高亮违规点</button>
+        </div>
+        <div class="compare">
+          <div class="compare-card bad" id="badCard">
+            <h3>❌ 违规做法（不可取）</h3>
+            <div class="mini-flow">
+              <div class="mini-item" data-bad="1"><span class="mini-icon">1</span>同一人既开票又收款</div>
+              <div class="mini-item" data-bad="2"><span class="mini-icon">2</span>收了现金不开收据</div>
+              <div class="mini-item" data-bad="3"><span class="mini-icon">3</span>收据编号混乱，领用无签收</div>
+              <div class="mini-item" data-bad="4"><span class="mini-icon">4</span>存根未核对就销毁</div>
+              <div class="mini-item" data-bad="5"><span class="mini-icon">5</span>当日收入不入账</div>
+              <div class="mini-item" data-bad="6"><span class="mini-icon">6</span>收了现金直接花掉（坐支）</div>
+            </div>
+          </div>
+          <div class="compare-card good">
+            <h3>✅ 合规做法（六步内控）</h3>
+            <div class="mini-flow">
+              <div class="mini-item"><span class="mini-icon">1</span>开票与收款由不同人员经办</div>
+              <div class="mini-item"><span class="mini-icon">2</span>所有现金收入均开具收款收据</div>
+              <div class="mini-item"><span class="mini-icon">3</span>严格控制收据/发票数量与编号</div>
+              <div class="mini-item"><span class="mini-icon">4</span>领用时签收数量与起讫编号</div>
+              <div class="mini-item"><span class="mini-icon">5</span>存根与入账联逐张核对后注销</div>
+              <div class="mini-item"><span class="mini-icon">6</span>当天入账，当天/次日送存银行</div>
+            </div>
+          </div>
+        </div>
+        <div class="note">课堂用法：先让学生看左侧"违规流"，抢答违反了哪一条；再对照右侧正确流程，最后联系《现金管理暂行条例》第10条"禁止坐支"。</div>
+      </div>
+    </section>
+
+    <footer>中级财务会计 · 第二章 货币资金 · 现金收入内部控制</footer>
+  </div>
+
+  <script>
+    const steps = [
+      {
+        title: "职务分离",
+        text: "签发现金收款收据与收款应由不同的人员经办，防止一人包办舞弊。",
+        tag: "不相容职务分离"
+      },
+      {
+        title: "必须开票",
+        text: "所有现金收入应开具收款收据，确保每笔收入有凭有据。",
+        tag: "有据可查"
+      },
+      {
+        title: "控制编号",
+        text: "控制收款收据与销售发票的数量和编号，防止跳号、缺号。",
+        tag: "票据管控"
+      },
+      {
+        title: "领用签收",
+        text: "领用收据时须由领用人签收领用数量和起讫编号，责任到人。",
+        tag: "领用登记"
+      },
+      {
+        title: "核对注销",
+        text: "开出收据的存根应与已入账的收据联按编号逐张核对无误后予以注销。",
+        tag: "确保全部入账"
+      },
+      {
+        title: "入账送存",
+        text: "所有现金收入必须当天入账；尽可能当天送存银行，不能则次日送存，以防坐支。",
+        tag: "禁止坐支"
+      }
+    ];
+
+    const flowStepsEl = document.getElementById("flowSteps");
+    const flowCaption = document.getElementById("flowCaption");
+    const flowProgress = document.getElementById("flowProgress");
+    let flowIndex = -1;
+    let flowTimer = null;
+
+    steps.forEach((step, i) => {
+      const div = document.createElement("div");
+      div.className = "step";
+      div.innerHTML = `
+        <div class="step-num">${i + 1}</div>
+        <h3>${step.title}</h3>
+        <p>${step.text}</p>
+      `;
+      flowStepsEl.appendChild(div);
+    });
+
+    const stepEls = [...document.querySelectorAll(".step")];
+
+    function renderFlow(index) {
+      flowIndex = index;
+      stepEls.forEach((el, i) => {
+        el.classList.remove("active", "done");
+        if (i < index) el.classList.add("done");
+        if (i === index) el.classList.add("active");
+      });
+      const pct = index < 0 ? 0 : ((index + 1) / steps.length) * 100;
+      flowProgress.style.width = pct + "%";
+
+      if (index >= 0 && index < steps.length) {
+        const s = steps[index];
+        flowCaption.innerHTML = `
+          <h3>第 ${index + 1} 步：${s.title}</h3>
+          <p>${s.text}</p>
+          <span class="tag">${s.tag}</span>
+        `;
+      } else {
+        flowCaption.innerHTML = `
+          <h3>点击"自动播放"开始</h3>
+          <p>六步内控环环相扣：分工 → 开票 → 控号 → 签收 → 核对注销 → 入账送存。</p>
+        `;
+      }
+    }
+
+    function nextFlow() {
+      if (flowIndex >= steps.length - 1) {
+        clearInterval(flowTimer);
+        flowTimer = null;
+        return;
+      }
+      renderFlow(flowIndex + 1);
+    }
+
+    document.getElementById("playFlow").addEventListener("click", () => {
+      clearInterval(flowTimer);
+      renderFlow(-1);
+      flowTimer = setInterval(() => {
+        if (flowIndex >= steps.length - 1) {
+          clearInterval(flowTimer);
+          flowTimer = null;
+          return;
+        }
+        nextFlow();
+      }, 1800);
+      setTimeout(nextFlow, 300);
+    });
+
+    document.getElementById("nextFlow").addEventListener("click", () => {
+      clearInterval(flowTimer);
+      if (flowIndex < steps.length - 1) renderFlow(flowIndex + 1);
+    });
+
+    document.getElementById("prevFlow").addEventListener("click", () => {
+      clearInterval(flowTimer);
+      if (flowIndex > 0) renderFlow(flowIndex - 1);
+      else renderFlow(-1);
+    });
+
+    document.getElementById("resetFlow").addEventListener("click", () => {
+      clearInterval(flowTimer);
+      renderFlow(-1);
+    });
+
+    // Tabs
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+      });
+    });
+
+    // Scene animation
+    const sceneSteps = [
+      { actors: ["actorA"], caption: "业务员 A 向客户签发现金收款收据（A 只负责开票，不碰现金）。" },
+      { actors: ["actorA", "actorB"], arrows: ["arrowAB"], caption: "收据交给出纳 B，B 收取现金——开票与收款分离。" },
+      { actors: ["actorB", "actorC"], arrows: ["arrowBC"], caption: "B 将现金和收据交会计 C，C 登记编号并当天入账。" },
+      { actors: ["actorC"], caption: "C 将收据存根与入账联逐张核对，核对无误后注销存根。" },
+      { actors: ["actorB", "actorC"], caption: "B 在 C 监督下将现金送存银行，杜绝坐支。" }
+    ];
+
+    let sceneTimer = null;
+
+    function playScene() {
+      clearInterval(sceneTimer);
+      const actors = ["actorA", "actorB", "actorC"];
+      const arrows = ["arrowAB", "arrowBC"];
+      actors.forEach(id => document.getElementById(id).classList.remove("highlight"));
+      arrows.forEach(id => document.getElementById(id).classList.remove("show"));
+
+      let i = 0;
+      const caption = document.getElementById("sceneCaption");
+
+      function showStep(idx) {
+        const step = sceneSteps[idx];
+        actors.forEach(id => document.getElementById(id).classList.remove("highlight"));
+        arrows.forEach(id => document.getElementById(id).classList.remove("show"));
+        (step.actors || []).forEach(id => document.getElementById(id).classList.add("highlight"));
+        (step.arrows || []).forEach(id => document.getElementById(id).classList.add("show"));
+        caption.innerHTML = `<h3>情景 ${idx + 1}/${sceneSteps.length}</h3><p>${step.caption}</p><span class="tag">现金收入内控</span>`;
+      }
+
+      showStep(0);
+      sceneTimer = setInterval(() => {
+        i++;
+        if (i >= sceneSteps.length) {
+          clearInterval(sceneTimer);
+          return;
+        }
+        showStep(i);
+      }, 2200);
+    }
+
+    document.getElementById("playScene").addEventListener("click", playScene);
+    document.getElementById("resetScene").addEventListener("click", () => {
+      clearInterval(sceneTimer);
+      ["actorA", "actorB", "actorC"].forEach(id => document.getElementById(id).classList.remove("highlight"));
+      ["arrowAB", "arrowBC"].forEach(id => document.getElementById(id).classList.remove("show"));
+      document.getElementById("sceneCaption").innerHTML = `
+        <h3>角色分工演示</h3>
+        <p>点击"播放情景"，看一笔现金收入如何经过三人分工、编号管控，最终当日入账并送存银行。</p>
+        <span class="tag">核心：不相容职务分离</span>
+      `;
+    });
+
+    // Compare flash
+    document.getElementById("flashBad").addEventListener("click", () => {
+      const items = document.querySelectorAll("[data-bad]");
+      items.forEach((item, i) => {
+        setTimeout(() => {
+          item.classList.remove("flash");
+          void item.offsetWidth;
+          item.classList.add("flash");
+        }, i * 350);
+      });
+    });
+  </script>
+</body>
+</html>
